@@ -5,16 +5,25 @@ namespace ipc {
 
 /**< TODO */
 std::array<Pipe, 2> Pipe::create() {
-    return {};
+    int fds[2];
+    ::pipe(fds);
+    return { Pipe(fds[0], true), Pipe(fds[1], false) };
 }
 
 Pipe::Pipe() : File(), read_end_(false) {}
 
 /**< TODO */
-Pipe::Pipe(const Pipe &other) {}
+Pipe::Pipe(const Pipe &other) {
+    fd_ = ::dup(other.fd_);
+    read_end_ = other.read_end_;
+}
 
 /**< TODO */
 Pipe &Pipe::operator=(const Pipe &other) {
+    if( this != &other) {
+        fd_ = ::dup(other.fd_);
+        read_end_ = other.read_end_;
+    }
     return *this;
 }
 
