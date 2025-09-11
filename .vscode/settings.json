@@ -55,5 +55,6 @@
         "vector": "cpp",
         "algorithm": "cpp"
     },
-    "cmake.sourceDirectory": "/Users/amyliu/Documents/umich/classes/rob320/projects/p1"
+    "cmake.sourceDirectory": "/Users/amyliu/Documents/umich/classes/rob320/projects/p1",
+    "C_Cpp.errorSquiggles": "disabled"
 }
