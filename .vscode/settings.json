@@ -53,7 +53,8 @@
         "unordered_map": "cpp",
         "variant": "cpp",
         "vector": "cpp",
-        "algorithm": "cpp"
+        "algorithm": "cpp",
+        "set": "cpp"
     },
     "cmake.sourceDirectory": "/Users/amyliu/Documents/umich/classes/rob320/projects/p1",
     "C_Cpp.errorSquiggles": "disabled"
