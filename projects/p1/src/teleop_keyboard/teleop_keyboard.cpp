@@ -1,5 +1,6 @@
 #include <teleop_keyboard/teleop_keyboard.hpp>
 #include <rix/msg/geometry/Twist2DStamped.hpp>
+#include <iostream>
 
 TeleopKeyboard::TeleopKeyboard(std::unique_ptr<rix::ipc::interfaces::IO> input,
                                std::unique_ptr<rix::ipc::interfaces::IO> output, double linear_speed,
@@ -8,32 +9,31 @@ TeleopKeyboard::TeleopKeyboard(std::unique_ptr<rix::ipc::interfaces::IO> input,
 
 void TeleopKeyboard::spin(std::unique_ptr<rix::ipc::interfaces::Notification> notif) {
     Signal s(SIGINT);
-    Fifo fifo("teleop", Fifo::Mode::READ);
-    File f(STDOUT_FILENO);
-
+    // Fifo fifo(input, Fifo::Mode::READ);
     uint32_t seq = 0;
     while(!s.is_ready() && !notif->is_ready()){
         uint8_t c;
-        fifo.read(&c,1);
+        ssize_t n = input->read(&c,1);
+        if( n <= 0) {
+            break;
+        }
         char ch = static_cast<char>(c);
         
         rix::msg::geometry::Twist2DStamped msg;
         msg.header.frame_id = "mbot";
         msg.header.seq = seq++;
-        // msg.header.stamp = rix::util::Time::now();
-        // msg.header.stamp.set(rix::util::Time::now());
-
+        msg.header.stamp = rix::util::Time::now().to_msg();
         msg.twist.vx = 0.0;
         msg.twist.vy = 0.0;
         msg.twist.wz = 0.0;
 
-        switch (c) {
-            case 'W' : msg.twist.vx = linear_speed; break;
-            case 'A' : msg.twist.vy = linear_speed; break;
-            case 'S' : msg.twist.vx = -linear_speed; break;
-            case 'D' : msg.twist.vy = -linear_speed; break;
-            case 'Q' : msg.twist.wz = angular_speed; break;
-            case 'E' : msg.twist.wz = -angular_speed; break;
+        switch (ch) {
+            case 'w' : msg.twist.vx = linear_speed; break;
+            case 'a' : msg.twist.vy = linear_speed; break;
+            case 's' : msg.twist.vx = -linear_speed; break;
+            case 'd' : msg.twist.vy = -linear_speed; break;
+            case 'q' : msg.twist.wz = angular_speed; break;
+            case 'e' : msg.twist.wz = -angular_speed; break;
             case ' ' : break;
             default: continue;
         }
@@ -43,12 +43,14 @@ void TeleopKeyboard::spin(std::unique_ptr<rix::ipc::interfaces::Notification> no
         vector<uint8_t> buffer(size);
         msg.serialize(buffer.data(), offset);
 
-        uint32_t size32 = static_cast<uint32_t>(size);
-        f.write(reinterpret_cast<const uint8_t*>(&size32), sizeof(size32));
+        rix::msg::standard::UInt32 msg_size;
+        msg_size.data = static_cast<uint32_t>(size);
+        offset = 0;
+        uint8_t size_buf[4];
+        msg_size.serialize(size_buf, offset);
 
-
-        f.write(buffer.data(), buffer.size());
-
+        output->write(size_buf, 4);
+        output->write(buffer.data(), buffer.size());
     }
 
 }

@@ -6,6 +6,7 @@
 #include "mocks/mock_io.hpp"
 #include "mocks/mock_mbot.hpp"
 #include "mocks/mock_notification.hpp"
+#include <iostream>
 
 void twist_equal(const rix::msg::geometry::Twist2D &a, const rix::msg::geometry::Twist2D &b) {
     EXPECT_EQ(a.vx, b.vx);
@@ -38,17 +39,16 @@ TEST(MBotDriverTest, TranslatesDriveCommandsAndExitsOnEOF) {
     twist1.twist.vy = 2.0f;
     twist1.twist.wz = 3.0f;
     rix::msg::geometry::Twist2DStamped twist2;
-    twist1.header.frame_id = "mbot_two";
-    twist1.twist.vx = 4.0f;
-    twist1.twist.vy = 5.0f;
-    twist1.twist.wz = 6.0f;
+    twist2.header.frame_id = "mbot_two";
+    twist2.twist.vx = 4.0f;
+    twist2.twist.vy = 5.0f;
+    twist2.twist.wz = 6.0f;
 
     rix::msg::standard::UInt32 size_msg1, size_msg2;
     size_msg1.data = twist1.size();
     size_msg2.data = twist2.size();
 
     std::vector<uint8_t> buffer(2 * (size_msg1.size() + size_msg1.data) + size_msg2.size() + size_msg2.data);
-    
     size_t offset = 0;
     size_msg1.serialize(buffer.data(), offset);
     twist1.serialize(buffer.data(), offset);
@@ -68,7 +68,9 @@ TEST(MBotDriverTest, TranslatesDriveCommandsAndExitsOnEOF) {
     
     auto notif = std::make_unique<testing::NiceMock<MockNotification>>();
 
+    cout << "hihihii" << endl;
     mbot_driver->spin(std::move(notif));
+    cout << "HERE" << endl;
 
     ASSERT_EQ(mbot_ptr->twists.size(), 4);
     twist_equal(mbot_ptr->twists[0].twist, twist1.twist);
@@ -84,10 +86,10 @@ TEST(MBotDriverTest, TranslatesDriveCommandsAndExitsOnNotification) {
     twist1.twist.vy = 2.0f;
     twist1.twist.wz = 3.0f;
     rix::msg::geometry::Twist2DStamped twist2;
-    twist1.header.frame_id = "my_mbot_two";
-    twist1.twist.vx = 4.0f;
-    twist1.twist.vy = 5.0f;
-    twist1.twist.wz = 6.0f;
+    twist2.header.frame_id = "my_mbot_two";
+    twist2.twist.vx = 4.0f;
+    twist2.twist.vy = 5.0f;
+    twist2.twist.wz = 6.0f;
 
     rix::msg::standard::UInt32 size_msg1, size_msg2;
     size_msg1.data = twist1.size();
