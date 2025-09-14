@@ -1,6 +1,7 @@
 #include "messages.h"
 #include "util.h"
 
+
 int ctrl_c_pressed = 0;
 void sigint_handler(int signum) {
     if (signum == SIGINT) {
@@ -24,7 +25,7 @@ int main(int argc, char* argv[]) {
     }
 
     // TODO: Initialize signal handler for SIGINT
-    Signal s(SIGINT);
+    sigint_handler(SIGINT);
 
     int server_fd;
     // TODO: Create a socket file descriptor for the server
@@ -32,21 +33,22 @@ int main(int argc, char* argv[]) {
     server_fd = socket(AF_INET, SOCK_STREAM,0);
 
     // TODO: Set the socket to non-blocking mode
-    int flags = fcntl(discovery_fd, F_GETFL, 0);
-    fcntl(discovery_fd, F_SETFL, flags | O_NONBLOCK);
+    int flags = fcntl(server_fd, F_GETFL, 0);
+    fcntl(server_fd, F_SETFL, flags | O_NONBLOCK);
 
     struct sockaddr_in address;
     // TODO: Initialize the sockaddr_in struct for the server
     //       use INADDR_ANY for the address and the specified port
-    address.sin_addr = INADDR_ANY;
+    address.sin_family = AF_INET;
+    address.sin_addr.s_addr = htonl(INADDR_ANY);
     address.sin_port = INADDR_ANY;
     
     int status;
     // TODO: Bind the socket to the specified address
-    status = bind(server_fd, &address, 0);
+    status = bind(server_fd, (struct sockaddr *)&address, sizeof(address));
 
     // TODO: Listen for up to 32 incoming connections on the socket
-    status = connect_until_success(server_fd, &address);
+    status = listen(server_fd, 32);
 
     int discovery_fd;
     // TODO: Create a socket file descriptor for the discovery server
@@ -56,10 +58,11 @@ int main(int argc, char* argv[]) {
     // TODO: Set the socket to non-blocking mode
     fcntl(discovery_fd, F_SETFL, flags | O_NONBLOCK);
 
-
     struct sockaddr_in discovery_address;
     // TODO: Initialize the sockaddr_in struct for the discovery server
-    discovery_address.sin_port =port;
+    discovery_address.sin_family = AF_INET;
+    discovery_address.sin_port = htons(port);
+    inet_pton(AF_INET, discovery_server_ip, &discovery_address.sin_addr);
 
     // TODO: Connect to the discovery server (use connect_until_success)
     connect_until_success(discovery_fd, &discovery_address);
@@ -67,10 +70,16 @@ int main(int argc, char* argv[]) {
     UserMessage register_msg = {0};
     // TODO: Initialize a UserMessage struct with the register opcode
     //       and the user's port, address, and name
-    register_msg.user.address = discovery_address;
-    register_msg.user.name = name;
     register_msg.opcode = 0;
     register_msg.user.port = port;
+
+    // address
+    strncpy(register_msg.user.address, public_ip, sizeof(register_msg.user.address));
+    register_msg.user.address[sizeof(register_msg.user.address) - 1] = '\0';
+
+    // copy name
+    strncpy(register_msg.user.name, name, sizeof(register_msg.user.name));
+    register_msg.user.name[sizeof(register_msg.user.name) - 1] = '\0';
 
 
     uint8_t* register_data;
@@ -88,7 +97,7 @@ int main(int argc, char* argv[]) {
         int client_fd;
         // TODO: Accept incoming connections from clients (use accept_until_success)
         //       Set status to the return value of accept_until_success
-        int status = accept_until_success(server_fd, client_fd );
+        int status = accept_until_success(server_fd, &client_fd );
         
         // If status < 0, accept_until_success encountered an error
         if (status < 0) {
@@ -131,19 +140,35 @@ int main(int argc, char* argv[]) {
     ctrl_c_pressed = 0;
 
     // TODO: Create a socket file descriptor for the discovery server
+    int discovery_server = socket(AF_INET, SOCK_STREAM, 0); 
 
     // TODO: Set the socket to non-blocking mode
+    fcntl(discovery_server, F_SETFL, flags | O_NONBLOCK); 
 
     // TODO: Connect to the discovery server (use connect_until_success)
+    connect_until_success(discovery_server, &discovery_address);
     
     UserMessage deregister_msg = {0};
     // TODO: Initialize a UserMessage struct with the deregister opcode
     //       and the user's port, address, and name
+    deregister_msg.opcode = 0;
+    deregister_msg.user.port = port;
+
+    // address
+    strncpy(deregister_msg.user.address, public_ip, sizeof(deregister_msg.user.address));
+    deregister_msg.user.address[sizeof(deregister_msg.user.address) - 1] = '\0';
+
+    // copy name
+    strncpy(deregister_msg.user.name, name, sizeof(deregister_msg.user.name));
+    deregister_msg.user.name[sizeof(deregister_msg.user.name) - 1] = '\0';
+
 
     uint8_t* deregister_data;
     // TODO: Encode the UserMessage struct into a byte array
+    deregister_data = encode_user_message(&deregister_msg);
 
     // TODO: Send the UserMessage to the discovery server (use send_until_success)
+    send_until_success(discovery_server, deregister_data, sizeof(deregister_data));
 
     // Free the public_ip string
     free(public_ip);

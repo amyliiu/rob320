@@ -40,21 +40,20 @@ int main(int argc, char *argv[]) {
 
     struct sockaddr_in discovery_address;
     // TODO: Initialize the sockaddr_in struct for the discovery server
-    // discovery_address.sin_addr = public_ip;
     discovery_address.sin_family = AF_INET;
-    // discovery_address.sin_port = ;
+    discovery_address.sin_port = htons(8000);
+    inet_pton(AF_INET, discovery_server_ip, &discovery_address.sin_addr);
 
     int status;
     // TODO: Connect to the discovery server (use connect_until_success)
     status = connect_until_success(discovery_fd, &discovery_address);
 
+    // TODO: Initialize a UserMessage struct with the request opcode
     UserMessage request_msg = {0};
     request_msg.opcode = 0;
-    // TODO: Initialize a UserMessage struct with the request opcode
-
-    uint8_t* request_data;
+    
     // TODO: Encode the UserMessage struct into a byte array
-    request_data = encode_user_message(&request_msg);
+    uint8_t *request_data = encode_user_message(&request_msg);
 
     // TODO: Send the UserMessage to the discovery server (use send_until_success)
     send_until_success(discovery_fd, request_data, sizeof(request_data));
@@ -97,14 +96,15 @@ int main(int argc, char *argv[]) {
     //       use AF_INET for ipv4 and SOCK_STREAM for TCP
     chat_fd = socket(AF_INET, SOCK_STREAM, 0 );
 
-
     // TODO: Set the socket to non-blocking mode
     flags = fcntl(chat_fd, F_GETFL, 0);
     fcntl(chat_fd, F_SETFL, flags | O_NONBLOCK);
 
     struct sockaddr_in chat_address;
     // TODO: Initialize the sockaddr_in struct for the selected chatter
-    // chat_address. = 
+    chat_address.sin_family = AF_INET;
+    chat_address.sin_port = htons(chatters.users[chatter_index].port);
+    inet_pton(AF_INET, chatters.users[chatter_index].address, &chat_address.sin_addr);
 
     // TODO: Connect to the selected chatter (use connect_until_success)
     connect_until_success(chat_fd, &chat_address);
@@ -114,7 +114,6 @@ int main(int argc, char *argv[]) {
     clear_input_buffer();
     // TODO: Read message from stdin
     fgets(buffer, sizeof(buffer), stdin);
-
 
     size_t len = strlen(buffer);
     buffer[len - 1] = '\0';
