@@ -1,6 +1,9 @@
 #include <teleop_keyboard/teleop_keyboard.hpp>
 #include <rix/msg/geometry/Twist2DStamped.hpp>
 #include <iostream>
+#include <vector>
+
+using namespace std;
 
 TeleopKeyboard::TeleopKeyboard(std::unique_ptr<rix::ipc::interfaces::IO> input,
                                std::unique_ptr<rix::ipc::interfaces::IO> output, double linear_speed,
