@@ -41,7 +41,7 @@ int main(int argc, char *argv[]) {
     struct sockaddr_in discovery_address;
     // TODO: Initialize the sockaddr_in struct for the discovery server
     discovery_address.sin_family = AF_INET;
-    discovery_address.sin_port = htons(8000);
+
     inet_pton(AF_INET, discovery_server_ip, &discovery_address.sin_addr);
 
     int status;

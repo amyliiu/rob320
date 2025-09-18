@@ -25,7 +25,7 @@ int main(int argc, char* argv[]) {
     }
 
     // TODO: Initialize signal handler for SIGINT
-    sigint_handler(SIGINT);
+    signal(SIGINT, sigint_handler);
 
     int server_fd;
     // TODO: Create a socket file descriptor for the server
@@ -41,7 +41,7 @@ int main(int argc, char* argv[]) {
     //       use INADDR_ANY for the address and the specified port
     address.sin_family = AF_INET;
     address.sin_addr.s_addr = htonl(INADDR_ANY);
-    address.sin_port = INADDR_ANY;
+    address.sin_port = htons(port);
     
     int status;
     // TODO: Bind the socket to the specified address
@@ -61,7 +61,8 @@ int main(int argc, char* argv[]) {
     struct sockaddr_in discovery_address;
     // TODO: Initialize the sockaddr_in struct for the discovery server
     discovery_address.sin_family = AF_INET;
-    discovery_address.sin_port = htons(port);
+    discovery_address.sin_port = htons(5000);
+    // TODO: confirm this?
     inet_pton(AF_INET, discovery_server_ip, &discovery_address.sin_addr);
 
     // TODO: Connect to the discovery server (use connect_until_success)
@@ -70,7 +71,7 @@ int main(int argc, char* argv[]) {
     UserMessage register_msg = {0};
     // TODO: Initialize a UserMessage struct with the register opcode
     //       and the user's port, address, and name
-    register_msg.opcode = 0;
+    register_msg.opcode = 1;
     register_msg.user.port = port;
 
     // address
@@ -87,7 +88,7 @@ int main(int argc, char* argv[]) {
     register_data = encode_user_message(&register_msg);
 
     // TODO: Send the UserMessage to the discovery server (use send_until_success)
-    send_until_success(discovery_fd, register_data, sizeof(register_data));
+    send_until_success(discovery_fd, register_data, sizeof(UserMessage));
 
     // TODO: Close the connection to the discovery server
     close(discovery_fd);
@@ -151,7 +152,7 @@ int main(int argc, char* argv[]) {
     UserMessage deregister_msg = {0};
     // TODO: Initialize a UserMessage struct with the deregister opcode
     //       and the user's port, address, and name
-    deregister_msg.opcode = 0;
+    deregister_msg.opcode = 2;
     deregister_msg.user.port = port;
 
     // address
@@ -172,4 +173,6 @@ int main(int argc, char* argv[]) {
 
     // Free the public_ip string
     free(public_ip);
+    free(register_data);
+    free(deregister_data);
 }

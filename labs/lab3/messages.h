@@ -3,6 +3,7 @@
 #include <string.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 #pragma pack(push, 1)
 typedef struct {
@@ -51,12 +52,9 @@ int print_chatters(ChattersMessage* msg) {
 uint8_t* encode_chat_message(ChatMessage* msg) {
     // TODO: Cast the ChatMessage pointer to a uint8_t pointer so that the
     //       message can be transported as bytes
-    // uint8_t *res;
-    // memcpy(res, msg->timestamp, 8);
-    // memcpy(res+8, msg->message, 16);
-    // memcpy(res+24, msg->name, 4);
-    // return res;
-    return (uint8_t*) msg;
+    uint8_t *res = malloc(sizeof(ChatMessage));
+    memcpy(res, msg, sizeof(ChatMessage));
+    return res;
 }
 
 ChatMessage* decode_chat_message(uint8_t* data, size_t len) {
@@ -64,31 +62,20 @@ ChatMessage* decode_chat_message(uint8_t* data, size_t len) {
     //       message can be read as a ChatMessage struct
     //       If the length of the data is not equal to the size of the
     //       ChatMessage struct, return NULL
-    // ChatMessage *res;
-    // memcpy(res->timestamp, data, 8);
-    // memcpy(res->message, data+8, 16);
-    // memcpy(res->name, data+24, 4);
-    // if(sizeof(res) != 28){
-    //     return NULL;
-    // }
-    // return res;
-    if(sizeof(ChatMessage) != len) {
+    ChatMessage *res;
+    memcpy(res, data, sizeof(ChatMessage));
+    if(len >= sizeof(ChatMessage)) {
         return NULL;
     }
-    return (ChatMessage *)data;
+    return res;
 }
 
 uint8_t* encode_user_message(UserMessage* msg) {
     // TODO: Cast the UserMessage pointer to a uint8_t pointer so that the
     //       message can be transported as bytes
-    // uint8_t *res;
-    // memcpy(res, msg->opcode, 1);
-    // memcpy(res+2, msg->user.port, 2);
-    // memcpy(res+4, msg->user.address, 4);
-    // memcpy(res+8, msg->user.name, 8);
-    
-    // return res;
-    return (uint8_t *) msg;
+    uint8_t *res = malloc(sizeof(UserMessage));
+    memcpy(res, msg, sizeof(UserMessage));
+    return res;
 }
 
 UserMessage* decode_user_message(uint8_t* data, size_t len) {
@@ -97,17 +84,20 @@ UserMessage* decode_user_message(uint8_t* data, size_t len) {
     //       If the length of the data is not equal to the size of the
     //       UserMessage struct, return NULL
     
-    if( sizeof(UserMessage *) != len) {
+    UserMessage *res;
+    memcpy(res, data, sizeof(UserMessage));
+    if(len >= sizeof(UserMessage)) {
         return NULL;
     }
-    return (UserMessage *) data;
+    return res;
 }
 
 uint8_t* encode_chatters_message(ChattersMessage* msg) {
     // TODO: Cast the ChattersMessage pointer to a uint8_t pointer so that the
     //       message can be transported as bytes
-    
-    return (uint8_t *) msg;
+    uint8_t *res = malloc(sizeof(ChattersMessage));
+    memcpy(res, msg, sizeof(ChattersMessage));
+    return res;
 }
 
 ChattersMessage* decode_chatters_message(uint8_t* data, size_t len) {
@@ -115,10 +105,11 @@ ChattersMessage* decode_chatters_message(uint8_t* data, size_t len) {
     //       message can be read as a ChattersMessage struct
     //       If the length of the data is not equal to the size of the
     //       ChattersMessage struct, return NULL
-    
-    if( sizeof(ChattersMessage) != len) {
+    ChattersMessage *res;
+    memcpy(res, data, sizeof(ChattersMessage));
+    if(len >= sizeof(ChattersMessage)) {
         return NULL;
     }
-    return (ChattersMessage *)data;
+    return res;
 }
 
