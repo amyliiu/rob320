@@ -40,23 +40,34 @@ int main(int argc, char *argv[]) {
 
     struct sockaddr_in discovery_address;
     // TODO: Initialize the sockaddr_in struct for the discovery server
+    memset(&discovery_address, 0, sizeof(discovery_address));
     discovery_address.sin_family = AF_INET;
+    discovery_address.sin_port = htons(DISCOVERY_PORT);
 
     inet_pton(AF_INET, discovery_server_ip, &discovery_address.sin_addr);
 
     int status;
     // TODO: Connect to the discovery server (use connect_until_success)
     status = connect_until_success(discovery_fd, &discovery_address);
+    if (status != 0) {
+        fprintf(stderr, "Failed to connect to discovery server (status=%d)\n", status);
+        close(discovery_fd);
+        free(public_ip);
+        return 1;
+    }
 
     // TODO: Initialize a UserMessage struct with the request opcode
     UserMessage request_msg = {0};
-    request_msg.opcode = 0;
-    
+    request_msg.user.port = 4000;
+    strncpy(request_msg.user.address, public_ip, sizeof(request_msg.user.address)-1);
+    strncpy(request_msg.user.name, name, sizeof(request_msg.user.name)-1);
+    request_msg.opcode = 1;
+
     // TODO: Encode the UserMessage struct into a byte array
     uint8_t *request_data = encode_user_message(&request_msg);
 
     // TODO: Send the UserMessage to the discovery server (use send_until_success)
-    send_until_success(discovery_fd, request_data, sizeof(request_data));
+    send_until_success(discovery_fd, request_data, sizeof(UserMessage));
 
     uint8_t chatters_data[sizeof(ChattersMessage)] = {0};
     // TODO: Receive a ChattersMessage from discovery server (use recv_until_success)
@@ -102,6 +113,7 @@ int main(int argc, char *argv[]) {
 
     struct sockaddr_in chat_address;
     // TODO: Initialize the sockaddr_in struct for the selected chatter
+    memset(&chat_address, 0, sizeof(chat_address));
     chat_address.sin_family = AF_INET;
     chat_address.sin_port = htons(chatters.users[chatter_index].port);
     inet_pton(AF_INET, chatters.users[chatter_index].address, &chat_address.sin_addr);
@@ -129,7 +141,7 @@ int main(int argc, char *argv[]) {
     chat_data = encode_chat_message(&chat_msg);
 
     // TODO: Send the ChatMessage to the selected chatter (use send_until_success)
-    send_until_success(chat_fd, chat_data, len);
+    send_until_success(chat_fd, chat_data, sizeof(ChatMessage));
 
     // TODO: Close the connection to the selected chatter
     close(chat_fd);

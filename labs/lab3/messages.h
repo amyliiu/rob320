@@ -62,11 +62,12 @@ ChatMessage* decode_chat_message(uint8_t* data, size_t len) {
     //       message can be read as a ChatMessage struct
     //       If the length of the data is not equal to the size of the
     //       ChatMessage struct, return NULL
-    ChatMessage *res;
-    memcpy(res, data, sizeof(ChatMessage));
-    if(len >= sizeof(ChatMessage)) {
+
+    if(len !=sizeof(ChatMessage)) {
         return NULL;
     }
+    ChatMessage *res = malloc(sizeof(ChatMessage));
+    memcpy(res, data, sizeof(ChatMessage));
     return res;
 }
 
@@ -83,12 +84,11 @@ UserMessage* decode_user_message(uint8_t* data, size_t len) {
     //       message can be read as a UserMessage struct
     //       If the length of the data is not equal to the size of the
     //       UserMessage struct, return NULL
-    
-    UserMessage *res;
-    memcpy(res, data, sizeof(UserMessage));
-    if(len >= sizeof(UserMessage)) {
+    if(len != sizeof(UserMessage)) {
         return NULL;
     }
+    UserMessage *res = malloc(sizeof(UserMessage));
+    memcpy(res, data, sizeof(UserMessage));
     return res;
 }
 
@@ -105,11 +105,11 @@ ChattersMessage* decode_chatters_message(uint8_t* data, size_t len) {
     //       message can be read as a ChattersMessage struct
     //       If the length of the data is not equal to the size of the
     //       ChattersMessage struct, return NULL
-    ChattersMessage *res;
-    memcpy(res, data, sizeof(ChattersMessage));
-    if(len >= sizeof(ChattersMessage)) {
+    if(len != sizeof(ChattersMessage)){
         return NULL;
     }
+    ChattersMessage *res = malloc(sizeof(ChattersMessage));
+    memcpy(res, data, sizeof(ChattersMessage));
     return res;
 }
 
